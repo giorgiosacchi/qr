@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generatore QR Code - Giorgio Sacchi</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1d2733;
+      --muted: #617086;
+      --primary: #2457c5;
+      --primary2: #173f95;
+      --border: #d9e1ee;
+      --danger: #b00020;
+      --ok: #137333;
+      --field: #ffffff;
+      --shadow: 0 16px 40px rgba(19, 44, 88, 0.12);
+    }
+
+    body.dark {
+      --bg: #111827;
+      --card: #1f2937;
+      --text: #f3f4f6;
+      --muted: #c3cad6;
+      --primary: #7aa2ff;
+      --primary2: #a7c0ff;
+      --border: #3c4658;
+      --danger: #ff8fa3;
+      --ok: #86efac;
+      --field: #111827;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(36, 87, 197, .16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(20, 184, 166, .13), transparent 34%),
+        var(--bg);
+      color: var(--text);
+      padding: 22px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.65rem, 3vw, 2.5rem);
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 13px 0 6px;
+      color: var(--text);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--field);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 13px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input[type="color"] {
+      min-height: 48px;
+      padding: 6px;
+      cursor: pointer;
+    }
+
+    .color-control {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .color-swatch {
+      width: 58px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
+    }
+
+    .color-value {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: .9rem;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(36, 87, 197, .12);
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 15px;
+      font-weight: 800;
+      font-size: .98rem;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+
+    .primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    body.dark .primary {
+      color: #061125;
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--border);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+
+    #fields {
+      margin-top: 10px;
+    }
+
+    .qrbox {
+      display: grid;
+      place-items: center;
+      min-height: 330px;
+      border: 1px dashed var(--border);
+      border-radius: 22px;
+      background: rgba(128, 128, 128, .04);
+      padding: 18px;
+      overflow: auto;
+    }
+
+    #qrcode {
+      padding: 14px;
+      background: white;
+      border-radius: 18px;
+    }
+
+    #qrcode img,
+    #qrcode canvas,
+    #qrcode svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #qrcode svg {
+      shape-rendering: crispEdges;
+      background: white;
+    }
+
+    .preview-title {
+      margin: 0 0 14px;
+      font-size: 1.2rem;
+    }
+
+    .output {
+      margin-top: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(128, 128, 128, .05);
+      padding: 13px;
+      max-height: 190px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: .86rem;
+    }
+
+    .message {
+      margin-top: 12px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .message.ok {
+      color: var(--ok);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .small {
+      font-size: .88rem;
+      padding: 9px 11px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      color: var(--muted);
+    }
+
+    .checkbox-row input {
+      width: auto;
+    }
+
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0 2px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    body.dark .mode-btn.active {
+      color: #061125;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .recognizer-box {
+      display: grid;
+      gap: 14px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      background: rgba(128,128,128,.04);
+    }
+
+    .image-preview-box {
+      display: grid;
+      place-items: center;
+      min-height: 240px;
+      border: 1px dashed var(--border);
+      border-radius: 18px;
+      background: rgba(128, 128, 128, .04);
+      padding: 12px;
+      overflow: auto;
+    }
+
+    #recognizerPreview {
+      max-width: 100%;
+      max-height: 420px;
+      display: none;
+      border-radius: 12px;
+    }
+
+    .result-title {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    @media (max-width: 850px) {
+      body {
+        padding: 14px;
+      }
+
+      header,
+      .layout {
+        display: block;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+        margin-top: 14px;
+      }
+
+      .card {
+        margin-bottom: 16px;
+        padding: 16px;
+      }
+
+      .grid2,
+      .grid3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Generatore di QR Code</h1>
+        <p class="subtitle">Scegli il tipo di QR, compila i dati richiesti e genera l’immagine scaricabile.</p>
+      </div>
+      <div class="top-actions">
+        <select id="themeSelect" class="small" aria-label="Scelta tema" style="width:auto;min-width:150px;">
+          <option value="light">Tema chiaro</option>
+          <option value="dark">Tema scuro</option>
+        </select>
+        <button class="secondary small" id="sampleBtn" type="button">Esempio contatto</button>
+      </div>
+    </header>
+
+    <div class="card" style="margin-bottom:20px;">
+      <label style="margin-top:0;">Modalità</label>
+      <div class="mode-switch">
+        <button class="mode-btn active" id="modeGenerateBtn" type="button">Genera QR Code</button>
+        <button class="mode-btn" id="modeRecognizeBtn" type="button">Riconosci QR Code</button>
+      </div>
+      <p class="hint" id="modeHint">Scegli se creare un nuovo QR Code oppure leggere il contenuto di un QR presente in un’immagine.</p>
+    </div>
+
+    <main class="layout">
+      <section class="card" id="generatorSection">
+        <label for="qrType">Tipo di QR Code</label>
+        <select id="qrType">
+          <option value="text">Testo libero</option>
+          <option value="url">Sito web / URL</option>
+          <option value="vcard">Contatto vCard</option>
+          <option value="email">Email</option>
+          <option value="phone">Telefono</option>
+          <option value="sms">SMS</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="wifi">Wi-Fi</option>
+          <option value="geo">Posizione geografica</option>
+          <option value="event">Evento calendario</option>
+        </select>
+        <p class="hint" id="typeHint"></p>
+
+        <div id="fields"></div>
+
+        <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+
+        <div class="grid3">
+          <div>
+            <label for="qrSize">Dimensione</label>
+            <select id="qrSize">
+              <option value="220">220 px</option>
+              <option value="300">300 px</option>
+              <option value="420" selected>420 px</option>
+              <option value="600">600 px</option>
+              <option value="800">800 px</option>
+              <option value="1000">1000 px</option>
+            </select>
+          </div>
+          <div>
+            <label for="qrColor">Colore QR</label>
+            <div class="color-control">
+              <span class="color-swatch" id="qrColorSwatch" aria-hidden="true"></span>
+              <div>
+                <input type="color" id="qrColor" value="#000000">
+                <span class="color-value" id="qrColorValue">#000000</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label for="qrBg">Sfondo</label>
+            <div class="color-control">
+              <span class="color-swatch" id="qrBgSwatch" aria-hidden="true"></span>
+              <div>
+                <input type="color" id="qrBg" value="#ffffff">
+                <span class="color-value" id="qrBgValue">#ffffff</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <label for="correction">Correzione errori</label>
+        <select id="correction">
+          <option value="L">Bassa - L</option>
+          <option value="M">Media - M</option>
+          <option value="Q">Alta - Q</option>
+          <option value="H" selected>Massima - H</option>
+        </select>
+
+        <div class="grid2" style="margin-top:12px;">
+          <div>
+            <label for="quietZone">Margine bianco (moduli)</label>
+            <select id="quietZone">
+              <option value="4">4 moduli</option>
+              <option value="6" selected>6 moduli</option>
+              <option value="8">8 moduli</option>
+              <option value="10">10 moduli</option>
+            </select>
+          </div>
+          <div>
+            <label for="readabilityPreset">Profilo leggibilità</label>
+            <select id="readabilityPreset">
+              <option value="balanced" selected>Bilanciato</option>
+              <option value="max">Massima leggibilità</option>
+              <option value="custom">Personalizzato</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="scannerSafeMode" checked>
+          <label for="scannerSafeMode" style="margin:0;font-weight:600;">Modalità scanner sicura: forza nero su bianco e massima pulizia</label>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="optimizeReadability" checked>
+          <label for="optimizeReadability" style="margin:0;font-weight:600;">Ottimizza nitidezza, dimensioni e margine del QR</label>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="autoGenerate" checked>
+          <label for="autoGenerate" style="margin:0;font-weight:600;">Aggiorna automaticamente mentre scrivo</label>
+        </div>
+
+        <div class="row" style="margin-top:18px;">
+          <button class="primary" id="generateBtn" type="button">Genera QR Code</button>
+          <button class="secondary" id="maxReadabilityBtn" type="button">Massima leggibilità automatica</button>
+          <button class="secondary" id="downloadBtn" type="button" disabled>Scarica PNG</button>
+          <button class="secondary" id="copyPayloadBtn" type="button">Copia dati QR</button>
+          <button class="danger" id="clearBtn" type="button">Pulisci</button>
+        </div>
+
+        <div id="message" class="message"></div>
+        <p class="hint" id="readabilityHint">Impostazioni consigliate per smartphone: 420 px o 600 px, correzione H, nero su bianco e margine bianco ampio.</p>
+        <p class="hint">Il pulsante <strong>Massima leggibilità automatica</strong> forza automaticamente le impostazioni più favorevoli alla scansione: nero su bianco, correzione H, margine ampio, ottimizzazione attiva e dimensione molto grande.</p>
+        <div class="output" id="qrTechnicalInfo">Nessun dato tecnico disponibile.</div>
+      </section>
+
+      <aside class="card" id="generatorPreviewSection">
+        <h2 class="preview-title">Anteprima</h2>
+        <div class="qrbox">
+          <div id="qrcode"></div>
+        </div>
+        <label>Dati inseriti nel QR</label>
+        <div class="output" id="payloadPreview">Nessun QR generato.</div>
+      </aside>
+    </main>
+
+    <section class="card hidden" id="recognizerSection">
+      <div class="recognizer-box">
+        <div>
+          <h2 class="preview-title" style="margin-top:0;">Riconoscimento QR Code</h2>
+          <p class="hint">Carica un file immagine contenente un QR Code. Il programma proverà a leggerlo e mostrerà il contenuto rilevato.</p>
+        </div>
+
+        <div class="upload-zone">
+          <label for="qrImageInput" style="margin-top:0;">Immagine con QR Code</label>
+          <input type="file" id="qrImageInput" accept="image/*">
+          <p class="hint">Formati tipici supportati: PNG, JPG, JPEG, WEBP. Se il QR è molto piccolo o sfocato, il riconoscimento può fallire.</p>
+
+          <div class="row" style="margin-top:14px;">
+            <button class="primary" id="recognizeBtn" type="button">Leggi immagine</button>
+            <button class="secondary" id="copyRecognizedBtn" type="button">Copia contenuto</button>
+            <button class="danger" id="clearRecognizedBtn" type="button">Pulisci</button>
+          </div>
+        </div>
+
+        <div class="image-preview-box">
+          <img id="recognizerPreview" alt="Anteprima immagine caricata">
+          <div id="recognizerPlaceholder" class="hint">Nessuna immagine caricata.</div>
+        </div>
+
+        <div>
+          <h3 class="result-title">Contenuto riconosciuto</h3>
+          <div class="output" id="recognizedOutput">Nessun contenuto letto.</div>
+          <div id="recognizerMessage" class="message"></div>
+        </div>
+      </div>
+      <canvas id="recognizerCanvas" class="hidden"></canvas>
+    </section>
+  </div>
+
+  <script>
+    const typeHints = {
+      text: "Per note, messaggi, appunti o qualsiasi contenuto testuale.",
+      url: "Per indirizzi web. Se manca https:// verrà aggiunto automaticamente.",
+      vcard: "Per creare un contatto leggibile da smartphone e rubriche.",
+      email: "Per preparare una email con destinatario, oggetto e testo.",
+      phone: "Per avviare una telefonata dal telefono che legge il QR.",
+      sms: "Per preparare un SMS con numero e messaggio.",
+      whatsapp: "Per aprire WhatsApp con numero e messaggio precompilato.",
+      wifi: "Per collegarsi a una rete Wi-Fi. Usa WPA/WPA2 se non sei sicuro.",
+      geo: "Per aprire una posizione su una mappa tramite latitudine e longitudine.",
+      event: "Per creare un evento calendario in formato iCalendar minimale."
+    };
+
+    const schemas = {
+      text: [
+        { id: "text", label: "Testo", type: "textarea", required: true, placeholder: "Scrivi qui il testo da inserire nel QR" }
+      ],
+      url: [
+        { id: "url", label: "Indirizzo web", type: "url", required: true, placeholder: "https://www.esempio.it" }
+      ],
+      vcard: [
+        { id: "name", label: "Nome e cognome", type: "text", required: true, placeholder: "Giorgio Sacchi" },
+        { id: "org", label: "Organizzazione / ruolo", type: "text", placeholder: "Università degli Studi di Genova" },
+        { id: "phone", label: "Telefono", type: "tel", placeholder: "+39 3420300970" },
+        { id: "email", label: "Email", type: "email", placeholder: "nome@dominio.it" },
+        { id: "url", label: "Sito web", type: "url", placeholder: "https://..." },
+        { id: "address", label: "Indirizzo", type: "text", placeholder: "Via, numero, CAP, città" },
+        { id: "note", label: "Note", type: "textarea", placeholder: "Eventuali note" }
+      ],
+      email: [
+        { id: "email", label: "Destinatario", type: "email", required: true, placeholder: "nome@dominio.it" },
+        { id: "subject", label: "Oggetto", type: "text", placeholder: "Oggetto della email" },
+        { id: "body", label: "Testo", type: "textarea", placeholder: "Testo della email" }
+      ],
+      phone: [
+        { id: "phone", label: "Numero di telefono", type: "tel", required: true, placeholder: "+39 3420300970" }
+      ],
+      sms: [
+        { id: "phone", label: "Numero di telefono", type: "tel", required: true, placeholder: "+39 3420300970" },
+        { id: "message", label: "Messaggio", type: "textarea", placeholder: "Testo SMS" }
+      ],
+      whatsapp: [
+        { id: "phone", label: "Numero WhatsApp con prefisso internazionale", type: "tel", required: true, placeholder: "393420300970" },
+        { id: "message", label: "Messaggio", type: "textarea", placeholder: "Messaggio WhatsApp" }
+      ],
+      wifi: [
+        { id: "ssid", label: "Nome rete Wi-Fi / SSID", type: "text", required: true, placeholder: "Nome rete" },
+        { id: "password", label: "Password", type: "text", placeholder: "Password Wi-Fi" },
+        { id: "encryption", label: "Sicurezza", type: "select", options: [["WPA", "WPA/WPA2"], ["WEP", "WEP"], ["nopass", "Nessuna password"]] },
+        { id: "hidden", label: "Rete nascosta", type: "select", options: [["false", "No"], ["true", "Sì"]] }
+      ],
+      geo: [
+        { id: "lat", label: "Latitudine", type: "number", required: true, placeholder: "44.4056", step: "any" },
+        { id: "lon", label: "Longitudine", type: "number", required: true, placeholder: "8.9463", step: "any" },
+        { id: "label", label: "Etichetta opzionale", type: "text", placeholder: "Genova" }
+      ],
+      event: [
+        { id: "title", label: "Titolo evento", type: "text", required: true, placeholder: "Lezione / riunione" },
+        { id: "location", label: "Luogo", type: "text", placeholder: "Teams / aula / indirizzo" },
+        { id: "start", label: "Inizio", type: "datetime-local", required: true },
+        { id: "end", label: "Fine", type: "datetime-local", required: true },
+        { id: "description", label: "Descrizione", type: "textarea", placeholder: "Descrizione dell’evento" }
+      ]
+    };
+
+    const fieldsEl = document.getElementById("fields");
+    const typeEl = document.getElementById("qrType");
+    const hintEl = document.getElementById("typeHint");
+    const qrcodeEl = document.getElementById("qrcode");
+    const payloadPreview = document.getElementById("payloadPreview");
+    const messageEl = document.getElementById("message");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    const modeGenerateBtn = document.getElementById("modeGenerateBtn");
+    const modeRecognizeBtn = document.getElementById("modeRecognizeBtn");
+    const generatorSection = document.getElementById("generatorSection");
+    const generatorPreviewSection = document.getElementById("generatorPreviewSection");
+    const recognizerSection = document.getElementById("recognizerSection");
+    const modeHint = document.getElementById("modeHint");
+
+    const qrImageInput = document.getElementById("qrImageInput");
+    const recognizeBtn = document.getElementById("recognizeBtn");
+    const recognizerPreview = document.getElementById("recognizerPreview");
+    const recognizerPlaceholder = document.getElementById("recognizerPlaceholder");
+    const recognizedOutput = document.getElementById("recognizedOutput");
+    const recognizerMessage = document.getElementById("recognizerMessage");
+    const recognizerCanvas = document.getElementById("recognizerCanvas");
+
+    let lastPayload = "";
+    let lastRecognizedText = "";
+    let lastGeneratedSvg = "";
+    let lastGeneratedMeta = null;
+
+    function escapeText(value) {
+      return String(value || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+        .replace(/\n/g, "\\n");
+    }
+
+    function value(id) {
+      const el = document.getElementById("field_" + id);
+      return el ? el.value.trim() : "";
+    }
+
+    function normalizeUrl(url) {
+      if (!url) return "";
+      if (!/^https?:\/\//i.test(url)) return "https://" + url;
+      return url;
+    }
+
+    function onlyDigitsPlus(s) {
+      return String(s || "").replace(/[^\d+]/g, "");
+    }
+
+    function whatsappDigits(s) {
+      return String(s || "").replace(/[^\d]/g, "");
+    }
+
+    function formatDateICS(localValue) {
+      if (!localValue) return "";
+      return localValue.replace(/[-:]/g, "").replace("T", "") + "00";
+    }
+
+    function makeField(field) {
+      const wrap = document.createElement("div");
+      const label = document.createElement("label");
+      label.setAttribute("for", "field_" + field.id);
+      label.textContent = field.label + (field.required ? " *" : "");
+      wrap.appendChild(label);
+
+      let input;
+      if (field.type === "textarea") {
+        input = document.createElement("textarea");
+      } else if (field.type === "select") {
+        input = document.createElement("select");
+        for (const [val, text] of field.options) {
+          const opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = text;
+          input.appendChild(opt);
+        }
+      } else {
+        input = document.createElement("input");
+        input.type = field.type || "text";
+        if (field.step) input.step = field.step;
+      }
+
+      input.id = "field_" + field.id;
+      if (field.placeholder) input.placeholder = field.placeholder;
+      if (field.required) input.required = true;
+      input.addEventListener("input", autoGenerate);
+      input.addEventListener("change", autoGenerate);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function setMode(mode) {
+      const isGenerate = mode === "generate";
+      if (isGenerate) {
+        resetRecognizer(false);
+      } else {
+        resetQR(true);
+      }
+      generatorSection.classList.toggle("hidden", !isGenerate);
+      generatorPreviewSection.classList.toggle("hidden", !isGenerate);
+      recognizerSection.classList.toggle("hidden", isGenerate);
+
+      modeGenerateBtn.classList.toggle("active", isGenerate);
+      modeRecognizeBtn.classList.toggle("active", !isGenerate);
+
+      modeHint.textContent = isGenerate
+        ? "Scegli il tipo di QR Code, compila i dati e genera l’immagine."
+        : "Carica un file immagine con un QR Code per leggere automaticamente il contenuto.";
+    }
+
+    function updateColorPreview() {
+      const qrColor = document.getElementById("qrColor").value;
+      const qrBg = document.getElementById("qrBg").value;
+      document.getElementById("qrColorSwatch").style.background = qrColor;
+      document.getElementById("qrBgSwatch").style.background = qrBg;
+      document.getElementById("qrColorValue").textContent = qrColor.toUpperCase();
+      document.getElementById("qrBgValue").textContent = qrBg.toUpperCase();
+    }
+
+    function resetRecognizer(clearPreview = true) {
+      lastRecognizedText = "";
+      recognizedOutput.textContent = "Nessun contenuto letto.";
+      recognizerMessage.className = "message";
+      recognizerMessage.textContent = "";
+      if (clearPreview) {
+        recognizerPreview.src = "";
+        recognizerPreview.style.display = "none";
+        recognizerPlaceholder.textContent = "Nessuna immagine caricata.";
+        recognizerPlaceholder.style.display = "block";
+        qrImageInput.value = "";
+      }
+    }
+
+    function showRecognizerMessage(text, ok = false) {
+      recognizerMessage.className = ok ? "message ok" : "message error";
+      recognizerMessage.textContent = text;
+    }
+
+    function loadPreviewFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          recognizerPreview.onload = () => resolve(reader.result);
+          recognizerPreview.onerror = () => reject(new Error("Non riesco a mostrare l’immagine caricata."));
+          recognizerPreview.src = reader.result;
+          recognizerPreview.style.display = "block";
+          recognizerPlaceholder.style.display = "none";
+        };
+        reader.onerror = () => reject(new Error("Errore nella lettura del file immagine."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function recognizeCurrentImage() {
+      if (typeof jsQR === "undefined") {
+        throw new Error("La libreria di riconoscimento QR non è stata caricata. Controlla la connessione Internet e ricarica la pagina.");
+      }
+
+      if (!recognizerPreview.src) {
+        throw new Error("Carica prima un file immagine.");
+      }
+
+      const canvas = recognizerCanvas;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const width = recognizerPreview.naturalWidth;
+      const height = recognizerPreview.naturalHeight;
+
+      if (!width || !height) {
+        throw new Error("L’immagine non è pronta per l’analisi.");
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(recognizerPreview, 0, 0, width, height);
+
+      const imageData = ctx.getImageData(0, 0, width, height);
+      let result = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "attemptBoth"
+      });
+
+      if (!result) {
+        // Secondo tentativo: ridimensionamento in caso di immagini molto grandi
+        const maxSide = 1200;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        if (scale < 1) {
+          const w2 = Math.max(1, Math.round(width * scale));
+          const h2 = Math.max(1, Math.round(height * scale));
+          canvas.width = w2;
+          canvas.height = h2;
+          ctx.drawImage(recognizerPreview, 0, 0, w2, h2);
+          const imageData2 = ctx.getImageData(0, 0, w2, h2);
+          result = jsQR(imageData2.data, imageData2.width, imageData2.height, {
+            inversionAttempts: "attemptBoth"
+          });
+        }
+      }
+
+      if (!result || !result.data) {
+        throw new Error("Non sono riuscito a trovare un QR Code leggibile in questa immagine.");
+      }
+
+      lastRecognizedText = result.data;
+      recognizedOutput.textContent = result.data;
+      showRecognizerMessage("QR Code riconosciuto correttamente.", true);
+    }
+
+    async function handleRecognizeClick() {
+      lastRecognizedText = "";
+      recognizedOutput.textContent = "Lettura in corso...";
+      recognizerMessage.className = "message";
+      recognizerMessage.textContent = "";
+
+      try {
+        const file = qrImageInput.files && qrImageInput.files[0];
+        if (!file) throw new Error("Seleziona un file immagine.");
+        await loadPreviewFromFile(file);
+        recognizeCurrentImage();
+      } catch (err) {
+        showRecognizerMessage(err.message || "Errore nel riconoscimento del QR Code.", false);
+      }
+    }
+
+    async function copyRecognizedContent() {
+      if (!lastRecognizedText) {
+        showRecognizerMessage("Non c’è ancora alcun contenuto riconosciuto da copiare.", false);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(lastRecognizedText);
+        showRecognizerMessage("Contenuto riconosciuto copiato negli appunti.", true);
+      } catch {
+        showRecognizerMessage("Copia automatica non riuscita. Puoi copiare il testo dal riquadro dei risultati.", false);
+      }
+    }
+
+    function renderFields() {
+      const type = typeEl.value;
+      hintEl.textContent = typeHints[type];
+      fieldsEl.innerHTML = "";
+
+      const schema = schemas[type];
+      const grid = document.createElement("div");
+      grid.className = type === "vcard" ? "grid2" : "";
+      schema.forEach(field => {
+        const node = makeField(field);
+        if (field.type === "textarea") node.style.gridColumn = "1 / -1";
+        grid.appendChild(node);
+      });
+      fieldsEl.appendChild(grid);
+      resetQR(false);
+    }
+
+    function validateRequired(type) {
+      for (const field of schemas[type]) {
+        if (field.required && !value(field.id)) {
+          throw new Error("Compila il campo obbligatorio: " + field.label + ".");
+        }
+      }
+    }
+
+    function buildPayload() {
+      const type = typeEl.value;
+      validateRequired(type);
+
+      if (type === "text") {
+        return value("text");
+      }
+
+      if (type === "url") {
+        const url = normalizeUrl(value("url"));
+        try { new URL(url); } catch { throw new Error("L’indirizzo web non sembra valido."); }
+        return url;
+      }
+
+      if (type === "vcard") {
+        const email = value("email");
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("L’email del contatto non sembra valida.");
+        return [
+          "BEGIN:VCARD",
+          "VERSION:3.0",
+          "FN:" + escapeText(value("name")),
+          value("org") ? "ORG:" + escapeText(value("org")) : "",
+          value("phone") ? "TEL:" + escapeText(value("phone")) : "",
+          email ? "EMAIL:" + escapeText(email) : "",
+          value("url") ? "URL:" + escapeText(normalizeUrl(value("url"))) : "",
+          value("address") ? "ADR:;;" + escapeText(value("address")) : "",
+          value("note") ? "NOTE:" + escapeText(value("note")) : "",
+          "END:VCARD"
+        ].filter(Boolean).join("\n");
+      }
+
+      if (type === "email") {
+        const email = value("email");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("L’email non sembra valida.");
+        const params = new URLSearchParams();
+        if (value("subject")) params.set("subject", value("subject"));
+        if (value("body")) params.set("body", value("body"));
+        return "mailto:" + email + (params.toString() ? "?" + params.toString() : "");
+      }
+
+      if (type === "phone") {
+        const phone = onlyDigitsPlus(value("phone"));
+        if (phone.length < 6) throw new Error("Il numero di telefono sembra troppo corto.");
+        return "tel:" + phone;
+      }
+
+      if (type === "sms") {
+        const phone = onlyDigitsPlus(value("phone"));
+        if (phone.length < 6) throw new Error("Il numero SMS sembra troppo corto.");
+        return "SMSTO:" + phone + ":" + value("message");
+      }
+
+      if (type === "whatsapp") {
+        const phone = whatsappDigits(value("phone"));
+        if (phone.length < 8) throw new Error("Per WhatsApp usa il numero con prefisso internazionale, senza + e senza spazi.");
+        const msg = encodeURIComponent(value("message"));
+        return "https://wa.me/" + phone + (msg ? "?text=" + msg : "");
+      }
+
+      if (type === "wifi") {
+        const ssid = value("ssid");
+        const pass = value("password");
+        const enc = value("encryption");
+        const hidden = value("hidden");
+        if (enc !== "nopass" && !pass) throw new Error("Per una rete protetta devi inserire la password.");
+        return "WIFI:T:" + enc + ";S:" + escapeText(ssid) + ";P:" + escapeText(pass) + ";H:" + hidden + ";;";
+      }
+
+      if (type === "geo") {
+        const lat = parseFloat(value("lat"));
+        const lon = parseFloat(value("lon"));
+        if (Number.isNaN(lat) || lat < -90 || lat > 90) throw new Error("La latitudine deve essere compresa tra -90 e 90.");
+        if (Number.isNaN(lon) || lon < -180 || lon > 180) throw new Error("La longitudine deve essere compresa tra -180 e 180.");
+        const label = value("label");
+        return "geo:" + lat + "," + lon + (label ? "?q=" + lat + "," + lon + "(" + encodeURIComponent(label) + ")" : "");
+      }
+
+      if (type === "event") {
+        const start = value("start");
+        const end = value("end");
+        if (start && end && new Date(end) <= new Date(start)) throw new Error("La fine dell’evento deve essere successiva all’inizio.");
+        return [
+          "BEGIN:VEVENT",
+          "SUMMARY:" + escapeText(value("title")),
+          value("location") ? "LOCATION:" + escapeText(value("location")) : "",
+          "DTSTART:" + formatDateICS(start),
+          "DTEND:" + formatDateICS(end),
+          value("description") ? "DESCRIPTION:" + escapeText(value("description")) : "",
+          "END:VEVENT"
+        ].filter(Boolean).join("\n");
+      }
+
+      return "";
+    }
+
+    function hexToRgb(hex) {
+      const clean = String(hex || "").replace("#", "");
+      if (clean.length !== 6) return null;
+      const n = parseInt(clean, 16);
+      if (Number.isNaN(n)) return null;
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+
+    function channelToLinear(v) {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+
+    function luminance(hex) {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return 0;
+      return 0.2126 * channelToLinear(rgb.r) + 0.7152 * channelToLinear(rgb.g) + 0.0722 * channelToLinear(rgb.b);
+    }
+
+    function contrastRatio(hex1, hex2) {
+      const l1 = luminance(hex1);
+      const l2 = luminance(hex2);
+      const light = Math.max(l1, l2);
+      const dark = Math.min(l1, l2);
+      return (light + 0.05) / (dark + 0.05);
+    }
+
+    function applyReadabilityPreset() {
+      const preset = document.getElementById("readabilityPreset").value;
+      const qrColor = document.getElementById("qrColor");
+      const qrBg = document.getElementById("qrBg");
+      const qrSize = document.getElementById("qrSize");
+      const correction = document.getElementById("correction");
+      const quietZone = document.getElementById("quietZone");
+      const optimize = document.getElementById("optimizeReadability");
+
+      if (preset === "balanced") {
+        qrColor.value = "#000000";
+        qrBg.value = "#ffffff";
+        qrSize.value = "420";
+        correction.value = "H";
+        quietZone.value = "20";
+        optimize.checked = true;
+      } else if (preset === "max") {
+        qrColor.value = "#000000";
+        qrBg.value = "#ffffff";
+        qrSize.value = "600";
+        correction.value = "H";
+        quietZone.value = "28";
+        optimize.checked = true;
+      }
+
+      updateColorPreview();
+      autoGenerate();
+    }
+
+    function drawOptimizedQRCode(rawNode, size, dark, light, quietZone) {
+      let sourceCanvas;
+
+      if (!rawNode) throw new Error("Non riesco a creare il QR Code.");
+      if (rawNode.tagName && rawNode.tagName.toLowerCase() === "canvas") {
+        sourceCanvas = rawNode;
+      } else {
+        sourceCanvas = document.createElement("canvas");
+        sourceCanvas.width = size;
+        sourceCanvas.height = size;
+        const sctx = sourceCanvas.getContext("2d");
+        sctx.imageSmoothingEnabled = false;
+        sctx.fillStyle = light;
+        sctx.fillRect(0, 0, size, size);
+        sctx.drawImage(rawNode, 0, 0, size, size);
+      }
+
+      const optimize = document.getElementById("optimizeReadability").checked;
+      const scaleFactor = optimize ? 2 : 1;
+      const outerSize = size + (quietZone * 2);
+
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = outerSize * scaleFactor;
+      finalCanvas.height = outerSize * scaleFactor;
+      finalCanvas.style.width = outerSize + "px";
+      finalCanvas.style.height = outerSize + "px";
+
+      const ctx = finalCanvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.scale(scaleFactor, scaleFactor);
+      ctx.fillStyle = light;
+      ctx.fillRect(0, 0, outerSize, outerSize);
+      ctx.drawImage(sourceCanvas, quietZone, quietZone, size, size);
+
+      return finalCanvas;
+    }
+
+    function updateReadabilityHint(contrast, size, quietZone, correction, dark, light) {
+      const hint = document.getElementById("readabilityHint");
+      const messages = [];
+
+      if (contrast < 4.5) {
+        messages.push("Contrasto basso: alcuni dispositivi potrebbero faticare a leggere il QR.");
+      } else if (contrast < 7) {
+        messages.push("Contrasto discreto ma non ottimale.");
+      } else {
+        messages.push("Contrasto ottimo per la scansione.");
+      }
+
+      if (size < 300) {
+        messages.push("Dimensione piccola: meglio 420 px o 600 px.");
+      } else if (size >= 420) {
+        messages.push("Dimensione adatta alla lettura da smartphone.");
+      }
+
+      if (quietZone < 16) {
+        messages.push("Aumentare il margine bianco può migliorare il riconoscimento.");
+      } else {
+        messages.push("Margine bianco adeguato.");
+      }
+
+      messages.push("Correzione errori: " + correction + ".");
+      messages.push("Colori attuali: " + dark.toUpperCase() + " su " + light.toUpperCase() + ".");
+
+      hint.textContent = messages.join(" ");
+    }
+
+    function escapeXml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+    }
+
+    function getEffectiveColors() {
+      const safeMode = document.getElementById("scannerSafeMode").checked;
+      const selectedDark = document.getElementById("qrColor").value;
+      const selectedLight = document.getElementById("qrBg").value;
+      if (safeMode) {
+        return {
+          dark: "#000000",
+          light: "#FFFFFF",
+          forced: true,
+          selectedDark,
+          selectedLight
+        };
+      }
+      return {
+        dark: selectedDark,
+        light: selectedLight,
+        forced: false,
+        selectedDark,
+        selectedLight
+      };
+    }
+
+    function getRecommendedMinModuleSize(moduleCount) {
+      if (moduleCount <= 21) return 12;
+      if (moduleCount <= 25) return 11;
+      if (moduleCount <= 33) return 10;
+      if (moduleCount <= 41) return 9;
+      if (moduleCount <= 49) return 8;
+      return 7;
+    }
+
+    function buildOptimizedQrSvg(payload, preferredSize, dark, light, correctionValue, quietModules, moduleBoost = 0, extraQuiet = 0) {
+      if (typeof qrcode === "undefined") {
+        throw new Error("La libreria avanzata per il QR non è stata caricata.");
+      }
+
+      const qr = qrcode(0, correctionValue);
+      qr.addData(payload);
+      qr.make();
+
+      const moduleCount = qr.getModuleCount();
+      const baseModuleSize = Math.max(Math.ceil(preferredSize / moduleCount), getRecommendedMinModuleSize(moduleCount));
+      const moduleSize = Math.max(4, baseModuleSize + moduleBoost);
+      const quiet = Math.max(4, quietModules + extraQuiet);
+      const totalModules = moduleCount + quiet * 2;
+      const totalSize = totalModules * moduleSize;
+      const innerSize = moduleCount * moduleSize;
+
+      let rects = "";
+      for (let r = 0; r < moduleCount; r++) {
+        for (let c = 0; c < moduleCount; c++) {
+          if (qr.isDark(r, c)) {
+            rects += '<rect x="' + ((c + quiet) * moduleSize) + '" y="' + ((r + quiet) * moduleSize) + '" width="' + moduleSize + '" height="' + moduleSize + '"/>';
+          }
+        }
+      }
+
+      const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + totalSize + '" height="' + totalSize + '" viewBox="0 0 ' + totalSize + ' ' + totalSize + '" shape-rendering="crispEdges">',
+        '<rect width="100%" height="100%" fill="' + escapeXml(light) + '"/>',
+        '<g fill="' + escapeXml(dark) + '">',
+        rects,
+        '</g>',
+        '</svg>'
+      ].join("");
+
+      return {
+        svg,
+        moduleCount,
+        moduleSize,
+        quietModules: quiet,
+        totalSize,
+        innerSize,
+        totalModules,
+        correctionValue
+      };
+    }
+
+    async function renderSvgToCanvas(svgText, targetSize) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          ctx.imageSmoothingEnabled = false;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, targetSize, targetSize);
+          ctx.drawImage(img, 0, 0, targetSize, targetSize);
+          resolve(canvas);
+        };
+        img.onerror = () => reject(new Error("Non riesco a renderizzare il QR generato."));
+        img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText);
+      });
+    }
+
+    function decodeCanvasWithJsQR(canvas) {
+      if (typeof jsQR === "undefined") return false;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const result = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "attemptBoth"
+      });
+      return !!(result && result.data);
+    }
+
+    async function verifyQrReadability(svgText, totalSize) {
+      const testSizes = {
+        large: Math.max(320, Math.min(totalSize, 1000)),
+        medium: 320,
+        small: 220
+      };
+
+      const results = {};
+      for (const key of Object.keys(testSizes)) {
+        const canvas = await renderSvgToCanvas(svgText, testSizes[key]);
+        results[key] = decodeCanvasWithJsQR(canvas);
+      }
+      return results;
+    }
+
+    function updateReadabilityHint(renderData, verification, colorsInfo, contrast) {
+      const hint = document.getElementById("readabilityHint");
+      const parts = [];
+
+      if (colorsInfo.forced) {
+        parts.push("Modalità scanner sicura attiva: per il QR generato vengono usati nero su bianco.");
+      } else {
+        if (contrast >= 7) parts.push("Contrasto colori ottimo.");
+        else if (contrast >= 4.5) parts.push("Contrasto colori discreto.");
+        else parts.push("Contrasto colori basso: la lettura potrebbe essere difficile.");
+      }
+
+      if (renderData.moduleSize >= 10) parts.push("Moduli grandi e ben separati.");
+      else if (renderData.moduleSize >= 8) parts.push("Moduli di dimensione buona.");
+      else parts.push("Moduli relativamente fitti.");
+
+      if (renderData.quietModules >= 6) parts.push("Margine bianco ampio.");
+      else parts.push("Margine bianco standard.");
+
+      if (verification.large && verification.medium && verification.small) {
+        parts.push("Verifica interna positiva anche a dimensioni ridotte.");
+      } else if (verification.large && verification.medium) {
+        parts.push("Buona leggibilità stimata su molti dispositivi.");
+      } else {
+        parts.push("Leggibilità non ottimale: conviene aumentare dimensione o ridurre i dati.");
+      }
+
+      hint.textContent = parts.join(" ");
+    }
+
+    function updateTechnicalInfo(renderData, verification, colorsInfo, payloadLength) {
+      const box = document.getElementById("qrTechnicalInfo");
+      const lines = [
+        "Dimensione finale generata: " + renderData.totalSize + " px",
+        "Moduli del QR: " + renderData.moduleCount + " × " + renderData.moduleCount,
+        "Dimensione di ciascun modulo: " + renderData.moduleSize + " px",
+        "Margine bianco: " + renderData.quietModules + " moduli",
+        "Correzione errori: " + renderData.correctionValue,
+        "Lunghezza contenuto: " + payloadLength + " caratteri",
+        "Test interno lettura - grande: " + (verification.large ? "OK" : "NO"),
+        "Test interno lettura - medio: " + (verification.medium ? "OK" : "NO"),
+        "Test interno lettura - piccolo: " + (verification.small ? "OK" : "NO"),
+        colorsInfo.forced
+          ? "Colori effettivi usati: nero su bianco (modalità scanner sicura)"
+          : "Colori effettivi usati: " + colorsInfo.dark.toUpperCase() + " su " + colorsInfo.light.toUpperCase()
+      ];
+      box.textContent = lines.join("\n");
+    }
+
+    function applyReadabilityPreset() {
+      const preset = document.getElementById("readabilityPreset").value;
+      const qrColor = document.getElementById("qrColor");
+      const qrBg = document.getElementById("qrBg");
+      const qrSize = document.getElementById("qrSize");
+      const correction = document.getElementById("correction");
+      const quietZone = document.getElementById("quietZone");
+      const optimize = document.getElementById("optimizeReadability");
+      const safeMode = document.getElementById("scannerSafeMode");
+
+      if (preset === "balanced") {
+        qrColor.value = "#000000";
+        qrBg.value = "#ffffff";
+        qrSize.value = "420";
+        correction.value = "H";
+        quietZone.value = "6";
+        optimize.checked = true;
+        safeMode.checked = true;
+      } else if (preset === "max") {
+        qrColor.value = "#000000";
+        qrBg.value = "#ffffff";
+        qrSize.value = "800";
+        correction.value = "H";
+        quietZone.value = "10";
+        optimize.checked = true;
+        safeMode.checked = true;
+      }
+
+      updateColorPreview();
+      autoGenerate();
+    }
+
+    function applyMaximumReadabilityAutomatic() {
+      const qrColor = document.getElementById("qrColor");
+      const qrBg = document.getElementById("qrBg");
+      const qrSize = document.getElementById("qrSize");
+      const correction = document.getElementById("correction");
+      const quietZone = document.getElementById("quietZone");
+      const optimize = document.getElementById("optimizeReadability");
+      const safeMode = document.getElementById("scannerSafeMode");
+      const preset = document.getElementById("readabilityPreset");
+
+      qrColor.value = "#000000";
+      qrBg.value = "#ffffff";
+      qrSize.value = "1000";
+      correction.value = "H";
+      quietZone.value = "10";
+      optimize.checked = true;
+      safeMode.checked = true;
+      preset.value = "custom";
+
+      updateColorPreview();
+      generateQR();
+    }
+
+    function getCorrectionLevel() {
+      const val = document.getElementById("correction").value;
+      return QRCode.CorrectLevel[val] || QRCode.CorrectLevel.M;
+    }
+
+    function resetQR(clearPayload = true) {
+      qrcodeEl.innerHTML = "";
+      downloadBtn.disabled = true;
+      lastGeneratedSvg = "";
+      lastGeneratedMeta = null;
+      document.getElementById("qrTechnicalInfo").textContent = "Nessun dato tecnico disponibile.";
+      if (clearPayload) {
+        lastPayload = "";
+        payloadPreview.textContent = "Nessun QR generato.";
+      }
+      messageEl.className = "message";
+      messageEl.textContent = "";
+    }
+
+    async function generateQR() {
+      qrcodeEl.innerHTML = "";
+      payloadPreview.textContent = "Generazione in corso...";
+      downloadBtn.disabled = true;
+      messageEl.className = "message";
+      messageEl.textContent = "";
+      document.getElementById("qrTechnicalInfo").textContent = "Analisi tecnica in corso...";
+
+      try {
+        if (typeof qrcode === "undefined") {
+          throw new Error("La libreria avanzata per il QR non è stata caricata. Controlla la connessione Internet e ricarica la pagina.");
+        }
+
+        const payload = buildPayload();
+        const size = parseInt(document.getElementById("qrSize").value, 10);
+        const quietZone = parseInt(document.getElementById("quietZone").value, 10);
+        const correctionValue = document.getElementById("correction").value;
+        const optimize = document.getElementById("optimizeReadability").checked;
+        const colorsInfo = getEffectiveColors();
+        const contrast = contrastRatio(colorsInfo.dark, colorsInfo.light);
+
+        let renderData = null;
+        let verification = { large: false, medium: false, small: false };
+        let moduleBoost = 0;
+        let extraQuiet = 0;
+        const attempts = optimize ? 5 : 1;
+
+        for (let i = 0; i < attempts; i++) {
+          renderData = buildOptimizedQrSvg(
+            payload,
+            size,
+            colorsInfo.dark,
+            colorsInfo.light,
+            correctionValue,
+            quietZone,
+            moduleBoost,
+            extraQuiet
+          );
+
+          verification = await verifyQrReadability(renderData.svg, renderData.totalSize);
+
+          if (!optimize) break;
+          if (verification.large && verification.medium && (verification.small || renderData.totalSize >= 420)) {
+            break;
+          }
+
+          moduleBoost += 1;
+          if (i % 2 === 1) extraQuiet += 1;
+        }
+
+        qrcodeEl.innerHTML = renderData.svg;
+        lastGeneratedSvg = renderData.svg;
+        lastGeneratedMeta = renderData;
+
+        lastPayload = payload;
+        payloadPreview.textContent = payload;
+        downloadBtn.disabled = false;
+
+        updateReadabilityHint(renderData, verification, colorsInfo, contrast);
+        updateTechnicalInfo(renderData, verification, colorsInfo, payload.length);
+
+        if (verification.large && verification.medium && verification.small) {
+          messageEl.className = "message ok";
+          messageEl.textContent = "QR Code generato e verificato con un controllo interno di leggibilità.";
+        } else if (verification.large && verification.medium) {
+          messageEl.className = "message ok";
+          messageEl.textContent = "QR Code generato con buona leggibilità stimata. Se vuoi ancora più sicurezza, usa il profilo “Massima leggibilità”.";
+        } else {
+          messageEl.className = "message error";
+          messageEl.textContent = "QR generato, ma la leggibilità non è ancora ottimale. Prova ad aumentare dimensione, usare meno dati o il profilo “Massima leggibilità”.";
+        }
+      } catch (err) {
+        qrcodeEl.innerHTML = "";
+        downloadBtn.disabled = true;
+        document.getElementById("qrTechnicalInfo").textContent = "Nessun dato tecnico disponibile.";
+        messageEl.className = "message error";
+        messageEl.textContent = err.message || "Errore nella generazione del QR.";
+      }
+    }
+
+    function autoGenerate() {
+      if (document.getElementById("autoGenerate").checked) {
+        window.clearTimeout(autoGenerate.timer);
+        autoGenerate.timer = window.setTimeout(generateQR, 250);
+      }
+    }
+
+    async function downloadPNG() {
+      const canvas = qrcodeEl.querySelector("canvas");
+      const img = qrcodeEl.querySelector("img");
+      const svg = qrcodeEl.querySelector("svg");
+
+      if (canvas) {
+        const link = document.createElement("a");
+        link.download = "qr-code.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        return;
+      }
+
+      if (img && img.src) {
+        const link = document.createElement("a");
+        link.download = "qr-code.png";
+        link.href = img.src;
+        link.click();
+        return;
+      }
+
+      if (svg || lastGeneratedSvg) {
+        try {
+          const svgText = svg ? svg.outerHTML : lastGeneratedSvg;
+          const size = lastGeneratedMeta && lastGeneratedMeta.totalSize ? lastGeneratedMeta.totalSize : 600;
+          const exportSize = Math.min(Math.max(size * 4, 1200), 3200);
+          const exportCanvas = await renderSvgToCanvas(svgText, exportSize);
+          const link = document.createElement("a");
+          link.download = "qr-code.png";
+          link.href = exportCanvas.toDataURL("image/png");
+          link.click();
+          return;
+        } catch (err) {
+          messageEl.className = "message error";
+          messageEl.textContent = "Errore nell’esportazione PNG del QR.";
+          return;
+        }
+      }
+
+      messageEl.className = "message error";
+      messageEl.textContent = "Non trovo un’immagine QR da scaricare.";
+    }
+
+    async function copyPayload() {
+      if (!lastPayload) {
+        try { lastPayload = buildPayload(); } catch (err) {
+          messageEl.className = "message error";
+          messageEl.textContent = err.message;
+          return;
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(lastPayload);
+        messageEl.className = "message ok";
+        messageEl.textContent = "Dati del QR copiati negli appunti.";
+      } catch {
+        messageEl.className = "message error";
+        messageEl.textContent = "Copia automatica non riuscita. Puoi copiare il testo dal riquadro di anteprima.";
+      }
+    }
+
+    function clearAll() {
+      document.querySelectorAll("#fields input, #fields textarea").forEach(el => el.value = "");
+      document.querySelectorAll("#fields select").forEach(el => el.selectedIndex = 0);
+      resetQR(true);
+    }
+
+    function sampleContact() {
+      typeEl.value = "vcard";
+      renderFields();
+      document.getElementById("field_name").value = "Giorgio Sacchi";
+      document.getElementById("field_org").value = "Università degli Studi di Genova";
+      document.getElementById("field_phone").value = "+39 3420300970";
+      document.getElementById("field_email").value = "giorgio.sacchi@gmail.com";
+      document.getElementById("field_address").value = "Via delle Cappuccine 3/8 - 16128 Genova";
+      generateQR();
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", generateQR);
+    document.getElementById("maxReadabilityBtn").addEventListener("click", applyMaximumReadabilityAutomatic);
+    modeGenerateBtn.addEventListener("click", () => setMode("generate"));
+    modeRecognizeBtn.addEventListener("click", () => setMode("recognize"));
+    recognizeBtn.addEventListener("click", handleRecognizeClick);
+    document.getElementById("copyRecognizedBtn").addEventListener("click", copyRecognizedContent);
+    document.getElementById("clearRecognizedBtn").addEventListener("click", () => resetRecognizer(true));
+    qrImageInput.addEventListener("change", async () => {
+      const file = qrImageInput.files && qrImageInput.files[0];
+      if (!file) {
+        resetRecognizer(false);
+        recognizerPreview.src = "";
+        recognizerPreview.style.display = "none";
+        recognizerPlaceholder.textContent = "Nessuna immagine caricata.";
+        recognizerPlaceholder.style.display = "block";
+        return;
+      }
+      try {
+        lastRecognizedText = "";
+        await loadPreviewFromFile(file);
+        recognizedOutput.textContent = "Immagine caricata. Premi “Leggi immagine” per riconoscere il contenuto del QR.";
+        recognizerMessage.className = "message";
+        recognizerMessage.textContent = "";
+      } catch (err) {
+        showRecognizerMessage(err.message, false);
+      }
+    });
+    document.getElementById("downloadBtn").addEventListener("click", downloadPNG);
+    document.getElementById("copyPayloadBtn").addEventListener("click", copyPayload);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+    document.getElementById("sampleBtn").addEventListener("click", sampleContact);
+    typeEl.addEventListener("change", renderFields);
+
+    document.getElementById("qrSize").addEventListener("change", autoGenerate);
+    document.getElementById("qrColor").addEventListener("input", () => { updateColorPreview(); autoGenerate(); });
+    document.getElementById("qrBg").addEventListener("input", () => { updateColorPreview(); autoGenerate(); });
+    document.getElementById("correction").addEventListener("change", autoGenerate);
+    document.getElementById("quietZone").addEventListener("change", autoGenerate);
+    document.getElementById("scannerSafeMode").addEventListener("change", autoGenerate);
+    document.getElementById("optimizeReadability").addEventListener("change", autoGenerate);
+    document.getElementById("readabilityPreset").addEventListener("change", applyReadabilityPreset);
+
+    document.getElementById("themeSelect").addEventListener("change", () => {
+      document.body.classList.toggle("dark", document.getElementById("themeSelect").value === "dark");
+    });
+
+    updateColorPreview();
+    renderFields();
+    resetRecognizer(false);
+    setMode("generate");
+  </script>
+</body>
+</html>
